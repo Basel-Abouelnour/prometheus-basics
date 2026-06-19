@@ -1,0 +1,15 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    env_file:
+      - aws_credentials.env
+    # this is needed for the EC2 service discovery to work
+    # not a best practice to have the AWS credentials in the container, but for testing purposes it is fine
+    ports:
+      - "9090:9090"
+
+volumes:
+  prometheus_data:

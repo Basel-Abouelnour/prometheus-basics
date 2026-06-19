@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'python_app'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['192.168.56.123:5000']
+
+  # trying dynamic target discovery with awsd_ec2_sd_config
+  - job_name: 'aws_ec2'
+    scrape_interval: 40s
+    scrape_timeout: 30s
+    tls_config:
+      insecure_skip_verify: true
+    
+    ec2_sd_configs:
+      - region: us-east-1
+        port: 9100
+    
+    relabel_configs:
+        - source_labels: [__meta_ec2_public_ip]
+          target_label: __address__
+          replacement: ${1}:9100
