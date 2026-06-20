@@ -14,6 +14,12 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ['192.168.56.123:5000']
+  
+  - job_name: 'java_app'
+    scrape_interval: 5s
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['192.168.56.123:6666']
 
   # trying dynamic target discovery with awsd_ec2_sd_config
   - job_name: 'aws_ec2'
