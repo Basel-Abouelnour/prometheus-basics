@@ -11,7 +11,8 @@ A hands-on demo repository covering core Prometheus concepts, from running it in
 | 1 | **Container Setup** | Run Prometheus via Docker Compose with a persistent volume |
 | 2 | **Basic Configuration** | Static scrape targets with custom intervals (`prometheus.yml`) |
 | 3 | **Python App Monitoring** | Flask app instrumented with `prometheus_client` (Counter metric) |
-| 4 | **AWS EC2 Service Discovery** | Dynamic target discovery using `ec2_sd_configs` with IAM credentials |
+| 4 | **Java App Monitoring** | Spring Boot app with Micrometer + Actuator exposing `/actuator/prometheus` |
+| 5 | **AWS EC2 Service Discovery** | Dynamic target discovery using `ec2_sd_configs` with IAM credentials |
 ---
 
 ## Repository Structure
@@ -20,9 +21,13 @@ A hands-on demo repository covering core Prometheus concepts, from running it in
 prometheus-basics/
 ├── compose.yaml           # Docker Compose for running Prometheus
 ├── prometheus.yml         # Scrape config (static + EC2 service discovery)
-├── app/
+├── python/
 │   ├── app.py             # Flask app exposing /metrics endpoint
 │   └── requirements.txt   # Python dependencies
+├── java/
+│   ├── Dockerfile         # eclipse-temurin:17-jre image
+│   ├── pom.xml            # Spring Boot + Micrometer dependencies
+│   └── src/               # Spring Boot source code
 └── iam_readonly_user      # IAM policy for EC2 read-only access
 ```
 
@@ -63,7 +68,7 @@ Prometheus will be available at **http://localhost:9090**
 ### 2. Run the Python App
 
 ```bash
-cd app
+cd python
 pip install -r requirements.txt
 python app.py
 ```
@@ -74,13 +79,28 @@ The app exposes:
 
 ---
 
+### 3. Run the Java App
+
+```bash
+cd java
+docker build -t spring-prometheus-demo .
+docker run -p 6666:6666 spring-prometheus-demo
+```
+
+The app exposes:
+- `GET /` — returns a test response
+- `GET /actuator/prometheus` — Prometheus metrics endpoint (via Micrometer)
+
+---
+
 ## Scrape Configuration Overview
 
-| Job | Target | Interval |
-|-----|--------|----------|
-| `prometheus` | `localhost:9090` | 15s (global) |
-| `python_app` | `192.168.56.123:5000` | 5s |
-| `aws_ec2` | EC2 instances (us-east-1, port 9100) | 40s |
+| Job | Target | Path | Interval |
+|-----|--------|------|----------|
+| `prometheus` | `localhost:9090` | `/metrics` | 15s (global) |
+| `python_app` | `192.168.56.123:5000` | `/metrics` | 5s |
+| `java_app` | `192.168.56.123:6666` | `/actuator/prometheus` | 5s |
+| `aws_ec2` | EC2 instances (us-east-1, port 9100) | `/metrics` | 40s |
 
 > **Note:** The EC2 job uses `ec2_sd_configs` for dynamic discovery. AWS credentials are passed via environment file — acceptable for testing, not recommended for production.
 
@@ -94,12 +114,6 @@ The IAM user requires read-only EC2 permissions. See `iam_readonly_user` for the
 
 ---
 
-## Metrics Exposed
-
-| Metric | Type | Description |
-|--------|------|-------------|
-| `app_requests_total` | Counter | Total number of HTTP requests to the Flask app |
-
 
 ## Final Results
 
@@ -111,4 +125,5 @@ The IAM user requires read-only EC2 permissions. See `iam_readonly_user` for the
 
 - Docker & Docker Compose
 - Python 3.x
+- Java 17+ / Maven (for building the Java app locally)
 - Node Exporter running on target EC2 instances (port 9100)
