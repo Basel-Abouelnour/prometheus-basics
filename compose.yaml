@@ -10,7 +10,28 @@ services:
     # not a best practice to have the AWS credentials in the container, but for testing purposes it is fine
     ports:
       - "9090:9090"
-
+    depends_on:
+    - cadvisor
+  
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+    - 8080:8080
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+    - redis
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+    - 6379:6379
+  
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
