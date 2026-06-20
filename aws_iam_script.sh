@@ -1,3 +1,4 @@
+#!/bin/bash
 aws iam create-user --user-name prom-user
 aws iam attach-user-policy \
               --policy-arn arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess \

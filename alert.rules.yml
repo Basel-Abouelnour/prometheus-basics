@@ -1,0 +1,10 @@
+groups:
+- name: Java_Application_Alerts
+  rules:
+  - alert: JavaAppDown
+    expr: up{job="java_app"} == 0
+    labels:
+      severity: critical
+    annotations:
+      summary: "Java application is down"
+      description: "The Java application is not responding. Please check the service."
