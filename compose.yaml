@@ -10,18 +10,34 @@ services:
     # not a best practice to have the AWS credentials in the container, but for testing purposes it is fine
     ports:
       - "9090:9090"
-      
+
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
     command:
       - '--path.rootfs=/host'
+    # The actual Linux root filesystem is mounted under /host, not /
+    # Without this option, Node Exporter would collect metrics about the container itself instead of the host.
+    
     network_mode: host
+    # Shares the host network namespace.
+    # No port mapping needed.
+    # More accurate network metrics.
+    # Simpler Prometheus configuration.
+
+
     pid: host
+    # Shares the host PID namespace.
+    # Allows the container to see host processes
+    # Without it, Node Exporter only sees processes running inside the container.
+    
     restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
-
+    # mounts the host filesystem as read-only, allowing Node Exporter to access system metrics and information from the host machine.
+    # Without rslave, Node Exporter may not immediately see the new mount.
+    # With rslave, the mount event propagates into the container.
+    # This is important for filesystem collectors.
 
 volumes:
   prometheus_data:
